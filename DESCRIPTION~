@@ -1,0 +1,15 @@
+Package: Rbnet
+Type: Package
+Title: Define and Manage Bayesian Networks
+Version: 1.0
+Date: 2015-04-07
+Author: Gherardo Varando
+Maintainer: Who to complain to <yourfault@somewhere.net>
+Description: Define and Manage Bayesian Networks, especially with bmop densities estimations
+License: GPL-3
+Imports: cubature,
+         Rbmop
+Suggests: bnlearn,
+          graph,
+          MASS,
+    parallel
