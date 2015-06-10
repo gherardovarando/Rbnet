@@ -109,18 +109,13 @@ bmop_fit.bnet<-function(object,data,nodes,unif.variables=NULL,Mins=NULL,
     var<-c(a,object$variables[[a]]$parents)
     D<-data[,var]
     if (!is.element(el = a,set = unif.variables)){
-      if (is.null(object$variables[[a]]$parents)){
-          object$variables[[a]]$prob<-Rbmop::estimate_bmop(data = D,
+   
+          object$variables[[a]]$prob<-Rbmop::bmop_fit(data = D,conditional = T,
                                                            Min = Mins[var],
                                                            Max=Maxs[var],
                                                            ...)
-      }
-      else{
-          object$variables[[a]]$prob<-Rbmop::cond_estimate_bmop(data = D,
-                                                                Min = Mins[var],
-                                                                Max=Maxs[var],
-                                                                ...)
-    }
+    
+
     }
     else{
       object$variables[[a]]$prob<-
@@ -135,76 +130,12 @@ bmop_fit.bnet<-function(object,data,nodes,unif.variables=NULL,Mins=NULL,
   return(object)
 }
 
-#' very-slow fitting 
-bmop_mle_fit.bnet<-function(object,data,nodes,unif.variables=NULL,
-                            Mins=NULL,Maxs=NULL,...){
-  nodes<-nodes[nodes %in% variables.bnet(object)]
-  for (a in nodes){
-    var<-c(a,object$variables[[a]]$parents)
-    D<-data[,var]
-    if (!is.element(el = a,set = unif.variables)){
-      if (is.null(object$variables[[a]]$parents)){
-        object$variables[[a]]$prob<-Rbmop::mle_fit_bmop(data = D,
-                                                        Min = Mins[var],
-                                                        Max=Maxs[var],
-                                                        ...)
-      }
-      else{
-        object$variables[[a]]$prob<-Rbmop::cond_mle_fit_bmop(data = D,
-                                                             Min = Mins[var],
-                                                             Max=Maxs[var],
-                                                             ...)
-      }
-    }
-    else{
-      object$variables[[a]]$prob<-
-        Rbmop::new_bmop(knots = Rbmop::generate_knots(data=D,N = 1),
-                        order = 1,ctrpoints = 1)
-      object$variables[[a]]$prob<-
-        Rbmop::normalize.bmop(object$variables[[a]]$prob)  
-      object$info$fit$unif.variables<-unif.variables
-    }
-  
-  }
-  object$info$fitted<-TRUE
-  
-  return(object)
-}
 
-
-#' slow-mle fit internal function
-bmop_search.bnet<-function(object,data,nodes,unif.variables=NULL,...){
-  nodes<-nodes[nodes %in% variables.bnet(object)]
-  for (a in nodes){
-    D<-data[,c(a,object$variables[[a]]$parents)]
-    if (!is.element(el = a,set = unif.variables)){
-      if (is.null(object$variables[[a]]$parents)){
-        object$variables[[a]]$prob<-Rbmop::search_bmop(data = D,...)
-                                  
-      }
-      else{
-        object$variables[[a]]$prob<-Rbmop::cond_search_bmop(data = D,...)
-      }
-    }
-    else{
-      object$variables[[a]]$prob<-
-        Rbmop::new_bmop(knots = Rbmop::generate_knots(data=D,N = 1),
-                        order = 1,ctrpoints = 1)
-      object$variables[[a]]$prob<-
-        Rbmop::normalize.bmop(object$variables[[a]]$prob)  
-      object$info$fit$unif.variables<-unif.variables
-    }
-  }
-  object$info$fitted<-TRUE
-  
-  return(object)
-}
 
 #' Fit a bnet object
 #' 
 #' @param object a bnet obejct
 #' @param data data.frame with names that include the variables of \code{object}
-#' @param mle logical, use mle estimations or not
 #' @param search logical, use penalized loglik search or not
 #' @param ... additional parameters to be passed to the bmop fitting functions
 #' @return a bnet object with fitted densities and conditional densities
@@ -234,7 +165,7 @@ bmop_search.bnet<-function(object,data,nodes,unif.variables=NULL,...){
 #'                      0,0,0,0,0))
 #' bnet<-new_bnet(names(data),mat)
 #' bnet<-fit.bnet(bnet,data)
-fit.bnet<-function(object,data,nodes=NULL,mle=bnetPar()$mle,
+fit.bnet<-function(object,data,nodes=NULL,
                    search=bnetPar()$search,...){
   if (is.null(nodes)){
     nodes<-variables.bnet(object)
@@ -242,11 +173,11 @@ fit.bnet<-function(object,data,nodes=NULL,mle=bnetPar()$mle,
   if (search){
    return(bmop_search.bnet(object=object, data=data , nodes=nodes, ...))
   }
-  if (mle){ 
-    return(bmop_mle_fit.bnet(object = 
+  else{
+    
+    return(bmop_fit.bnet(object = 
                                        object,data = data,nodes=nodes, ...))}
 
-  return(bmop_fit.bnet(object=object,data=data,nodes=nodes,...))
 }
 
 

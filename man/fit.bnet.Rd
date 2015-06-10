@@ -4,15 +4,12 @@
 \alias{fit.bnet}
 \title{Fit a bnet object}
 \usage{
-fit.bnet(object, data, nodes = NULL, mle = bnetPar()$mle,
-  search = bnetPar()$search, ...)
+fit.bnet(object, data, nodes = NULL, search = bnetPar()$search, ...)
 }
 \arguments{
 \item{object}{a bnet obejct}
 
 \item{data}{data.frame with names that include the variables of \code{object}}
-
-\item{mle}{logical, use mle estimations or not}
 
 \item{search}{logical, use penalized loglik search or not}
 
