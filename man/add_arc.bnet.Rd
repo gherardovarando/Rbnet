@@ -4,8 +4,7 @@
 \alias{add_arc.bnet}
 \title{add arc to a bnet object}
 \usage{
-add_arc.bnet(object, from, to, data = NULL, check = T, mle = F,
-  search = F, ...)
+add_arc.bnet(object, from, to, data = NULL, check = T, ...)
 }
 \arguments{
 \item{object}{a bnet obejct}
@@ -18,10 +17,6 @@ add_arc.bnet(object, from, to, data = NULL, check = T, mle = F,
 now has an additional parent}
 
 \item{check}{logical, to check or not for acyclic property}
-
-\item{mle}{logical, if use maximum-likelihood estimation in the new nodes}
-
-\item{search}{logical, if use greedy penalized logLik search}
 
 \item{...}{additional parameters to be passed to bmop fitting functions}
 }

@@ -50,7 +50,8 @@ classifier_bnet<-function(target,predictors,prior=NULL,data=NULL
       })}
     
     nb$bnets<-lapply(nb$target$levels,FUN = function(l){
-      return(fit.bnet(object = bnets[[l]],data = data[ data[,target]==l, predictors]
+      return(fit.bnet(object = bnets[[l]],
+                      data =   data[ data[,target]==l, predictors]
                       ,Maxs=Maxs,Mins=Mins))
     })
     names(nb$bnets)<-nb$target$levels
@@ -188,3 +189,14 @@ predict.onevsall_bnet<-function(object,newdata,...){
 variables.bnetClassifier<-function(object){
   return(c(variables(object$bnets[[1]])))
 }
+
+
+#' Tikz exporting
+#' 
+#' Export the bnet object in a .tex file with tikz format
+#' @param object a bnet object to  be exported
+#' @param file the name of the file 
+#' @details In the actual workspace a file will be created and the bnet object 
+#' will be exported in tikz format to be used in LaTex.  
+#' 
+#' 

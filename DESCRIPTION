@@ -12,4 +12,4 @@ Imports: cubature,
 Suggests: bnlearn,
           graph,
           MASS,
-    parallel
+          parallel

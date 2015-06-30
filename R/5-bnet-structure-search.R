@@ -16,13 +16,12 @@
 #'  @param maxp positive integer, the maximum number of parents for each node
 #'  @param maxrep positive integer, the maximum number of iterations or jump
 #'         in the search space
-#'  @param mle logical, if use mle estimation of bmop densities       
-#'  @param search logical, if use greedy penalized logLik search
 #'  @param ... additional parameters to be passed to bmop fitting functions
 #'  @return A bnet object, the bnet among the ones visited that minimized 
 #'         the score. 
-hc.bnet<-function(data, bnet=NULL, whitelist=NULL, blacklist=NULL, score=BIC,
-                  maxp=dim(data)[2], maxrep=1000, mle=F, search=T, ...  ){
+#'         @export
+hillClimb.bnet<-function(data, bnet=NULL, whitelist=NULL, blacklist=NULL, score=BIC,
+                  maxp=dim(data)[2], maxrep=1000, ...  ){
   
   cl<-match.call()
   if (is.null(bnet)){
@@ -32,38 +31,49 @@ hc.bnet<-function(data, bnet=NULL, whitelist=NULL, blacklist=NULL, score=BIC,
   if (!is.null(whitelist)){
    for (i in dim(whitelist)[1]){
      bnet<-add_arc.bnet(object = bnet,from = whitelist[i,1],to = whitelist[i,2]
-                        , check = TRUE, mle=FALSE, search=TRUE)
+                        , check = TRUE)
    }
   }
   
-  bnet <- fit.bnet(object = bnet,data = data,mle = mle,search=search,...)
+  bnet <- fit.bnet(object = bnet,data = data,...)
   finish<-FALSE
   rep <- 0
-  actualscore <- score(object=bnet, data=data)
-  #actualarcs <- arcs.bnet(bnet)
+  #actualscore <- score(object=bnet, data=data) #slower version
+  actualscore<-sum(sapply(bnet$variables,FUN = function(nod){
+    return(nod$prob$logLik)
+  }))
+  arcCandidates <- expand.grid(variables(bnet),variables(bnet),
+                               stringsAsFactors = FALSE)
+  names(arcCandidates)<-c("from","to")
   while (!finish){
    
     rep <- rep + 1
     print(rep)
     
-    fromto <- sample(variables(bnet) , size = 2, replace = F )
+    #fromto <- sample(variables(bnet) , size = 2, replace = F ) #naive version
+    idx <- sample(x = 1:(dim(arcCandidates)[1]),size = 1)
+    fromto <- arcCandidates[idx,]
+    arcCandidates<-arcCandidates[-idx,]
     
-    candidate <- add_arc.bnet(object = bnet, from = fromto[1], to=fromto[2], 
-                              check = T, data = data, mle=mle, search=search,
+    candidateAdd <- add_arc.bnet(object = bnet, from = fromto$from, to=fromto$to, 
+                              check = T, data = data,
                               ... )
     
     
-    candscore <- score(object=candidate , data=data)
+    candscoreAdd<-sum(sapply(candidateAdd$variables,FUN = function(nod){
+      return(nod$prob$logLik)
+    }))
+    #candscore1 <- score(object=candidate1 , data=data) #slower version
     
-    if (candscore < actualscore){
-      diff <- actualscore - candscore
+    if (candscoreAdd < actualscore){
+      diff <- actualscore - candscoreAdd
+      actualscore <- candscoreAdd
+      bnet <- candidateAdd
       
-      actualscore <- candscore
-      bnet <- candidate
     }
     
-    
-    if (rep>maxrep){ finish <- TRUE}
+    if (rep>=length(variables(bnet))^2){ finish <- TRUE}
+    if (rep>=maxrep){ finish <- TRUE}
     
    }
   

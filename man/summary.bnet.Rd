@@ -8,6 +8,8 @@
 }
 \arguments{
 \item{object}{a bnet object}
+
+\item{...}{compatibility arguments}
 }
 \description{
 Summary of a bnet object

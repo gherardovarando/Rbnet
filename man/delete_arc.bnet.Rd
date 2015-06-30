@@ -4,7 +4,7 @@
 \alias{delete_arc.bnet}
 \title{delete arc from a bnet object}
 \usage{
-delete_arc.bnet(object, from, to, data = NULL, mle = F, search = F, ...)
+delete_arc.bnet(object, from, to, data = NULL, ...)
 }
 \arguments{
 \item{object}{a bnet obejct}
@@ -14,10 +14,6 @@ delete_arc.bnet(object, from, to, data = NULL, mle = F, search = F, ...)
 \item{to}{node to end the arc}
 
 \item{data}{optionally a data.frame for fitting}
-
-\item{mle}{logical, if use maximum-likelihood estimation in the new nodes}
-
-\item{search}{logical, if use greedy penalized logLik search}
 
 \item{...}{additional parameters to be passed to bmop fitting functions}
 }

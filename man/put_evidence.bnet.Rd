@@ -4,7 +4,7 @@
 \alias{put_evidence.bnet}
 \title{put evidence on a bnet object}
 \usage{
-put_evidence.bnet(object, evidence, store.old = T)
+put_evidence.bnet(object, evidence, store.old = T, propagate = T)
 }
 \arguments{
 \item{object}{a bnet object}

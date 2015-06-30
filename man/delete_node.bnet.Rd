@@ -4,7 +4,7 @@
 \alias{delete_node.bnet}
 \title{delete node (one!) from a bnet object}
 \usage{
-delete_node.bnet(object, node, data = NULL, mle = F, search = F, ...)
+delete_node.bnet(object, node, data = NULL, ...)
 }
 \arguments{
 \item{object}{a bnet obejct}
@@ -12,10 +12,6 @@ delete_node.bnet(object, node, data = NULL, mle = F, search = F, ...)
 \item{node}{node to be deleted}
 
 \item{data}{optionally a data.frame for fitting}
-
-\item{mle}{logical, if use maximum-likelihood estimation in the new nodes}
-
-\item{search}{logical, if use greedy penalized logLik search}
 
 \item{...}{additional parameters to be passed to bmop fitting functions}
 }

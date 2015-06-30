@@ -2,7 +2,7 @@
 % Please edit documentation in R/0-bnet-base-functions.R
 \name{is.bnet}
 \alias{is.bnet}
-\title{Check if an object is abnet object}
+\title{Check if an object is a bnet object}
 \usage{
 is.bnet(x)
 }
@@ -13,6 +13,6 @@ is.bnet(x)
 logical
 }
 \description{
-Check if an object is abnet object
+Check if an object is a bnet object
 }
 

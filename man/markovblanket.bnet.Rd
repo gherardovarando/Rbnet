@@ -2,7 +2,7 @@
 % Please edit documentation in R/0-bnet-base-functions.R
 \name{markovblanket.bnet}
 \alias{markovblanket.bnet}
-\title{markovblanket of a bnet object}
+\title{Markov blanket of a bnet object}
 \usage{
 markovblanket.bnet(object, nodes)
 }
@@ -15,7 +15,7 @@ markovblanket.bnet(object, nodes)
 a vector with the markov blanket of the nodes in \code{nodes}
 }
 \description{
-markovblanket of a bnet object
+Markov blanket of a bnet object
 }
 \examples{
 \dontrun{data(asia,package="bnlearn")

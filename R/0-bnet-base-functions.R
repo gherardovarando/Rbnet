@@ -135,12 +135,23 @@ adj_matrix.bnet<-function(object){
 #' bnet<-new_bnet(c("A","B"),matrix(nrow=2,c(0,1,0,0)))
 #' plot(bnet)
 plot.bnet<-function(x,y=NULL,...){
+  oldpar<-par()
+  parnames<-names(oldpar)
+  parnames<-parnames[!parnames %in% c("cin",
+                                      "cra",
+                                      "csi",
+                                      "cxy",
+                                      "din",
+                                      "page") ]
   attrs<-list()
   attrs$node$fontsize<-"24"
   attrs$edge$arrowsize<-"0.5"
   attrs$edge$style<-"bold"
   g<-graph::graphAM(adjMat = adj_matrix.bnet(x),edgemode = "directed")
-  if (is.null(x$targets)){ return(Rgraphviz::plot(g,attrs=attrs ) )}
+  if (is.null(x$targets)){ 
+    Rgraphviz::plot(g,attrs=attrs )
+    par(oldpar[parnames])
+    return(invisible() )}
   nAttrs<-list()
   if (is.null(x$predictors)){
     predictors<-variables.bnet(object = x)
@@ -153,6 +164,8 @@ plot.bnet<-function(x,y=NULL,...){
                       rep("green",times = length(predictors)))
   names(nAttrs$fillcolor)<-c(x$targets,predictors)
   Rgraphviz::plot(g,nodeAttrs=nAttrs,attrs=attrs,... )
+  par(oldpar[parnames])
+  return(invisible())
 }
 
 
@@ -189,7 +202,7 @@ arcs.bnet<-function(object){
   return(arcs[!is.na(arcs[,1]),])
 }
 
-#' leaf, internal function
+# leaf, internal function
 leaf<-function(arcs,nodes=NULL){
   if (is.null(nodes)){
     nodes==unique(arcs[,1])
@@ -198,7 +211,7 @@ leaf<-function(arcs,nodes=NULL){
   return((nodes[ix])[1])
 }
 
-#' isacyclic, internal function
+# isacyclic, internal function
 isacyclic.arcs<-function(arcs,nodes){
   if (is.null(arcs)){return(TRUE)}  
   if (is.null(dim(arcs))){return(TRUE)}  
@@ -212,18 +225,21 @@ isacyclic.arcs<-function(arcs,nodes){
 
 #' check if an object fullfil the acyclic property
 #' 
-#' @param object
+#' @param object an R object 
 #' @return logical
 #' @export
 is.acyclic<-function(object){UseMethod("is.acyclic",object)}
 
 #' isacyclic bnet
+#' 
+#' @param object a bnet object
+#' @return logical
 is.acyclic.bnet<-function(object){
   return(isacyclic.arcs(arcs = arcs.bnet(object),
                         nodes = variables.bnet(object)))
 }
 
-#' markovblanket of a bnet object
+#' Markov blanket of a bnet object
 #' 
 #' @param object a bnet object
 #' @param nodes a vector of nodes of \code{object}
@@ -257,6 +273,7 @@ markovblanket.bnet<-function(object,nodes){
 #' Summary of a bnet object
 #' 
 #' @param object a bnet object
+#' @param ... compatibility arguments
 #' @export
 #' @examples
 #' \dontrun{data(gaussian.test,package="bnlearn")
@@ -292,7 +309,7 @@ summary.bnet<-function(object,...){
   return(summ)
 }
 
-#' summary internal function
+# summary internal function
 print.summary.bnet<-function(x,...){
   cat(x$info$model)
   cat("\n")
@@ -327,6 +344,7 @@ print.summary.bnet<-function(x,...){
 #' Print a bnet object
 #' 
 #' @param x a bnet object
+#' @param ... coptaibility arguments
 #' @export
 print.bnet<-function(x,...){
   print(summary.bnet(x))
@@ -373,7 +391,7 @@ is.fitted.bnet<-function(object){
 }
 
 
-#' Check if an object is abnet object
+#' Check if an object is a bnet object
 #' 
 #' @param x an R object
 #' @return logical
@@ -384,7 +402,7 @@ is.bnet <- function(x){
 
 #' Convert object to bnet 
 #' 
-#' ..when possible (matrix, bnlearn, graph)
+#' ..when possible (matrix, bnlearn, graph, formulas)
 #' @param x a R object
 #' @param ... parameter for compatibility reason
 #' @return a bnet object
@@ -449,16 +467,56 @@ as.bnet<-function(x,...){
   return(as.bnet(as.matrix(x)))
 }
 
+#' @importFrom stats AIC BIC
+NULL
 
+#' AIC of bnet 
+#' 
+#' Computes de Akaike Information Criteria for a bnet object over 
+#' a dataset of observations
+#' @param object a bnet object
+#' @param data the data to compute the log-likelihood
+#' @param ... compatibility arguments
+#' @param k penalization coefficient (k=2 standard AIC)
+#' @return Numerical, the Akaike Information Criteria computed.
+#' @seealso \code{\link{BIC.bnet}}
+#' @export
 AIC.bnet <- function(object, data, ... , k=2 ){
   aa <- 0
   for (a in variables(object)){
     aa <- aa + AIC(object$variables[[a]]$prob , k = k , 
-                   data = data[, c(a, object$variables[[a]]$parents )] ) 
+                   data = as.data.frame(
+                     data[, c(a, object$variables[[a]]$parents )]) ) 
   }
   return(aa)
 }
 
+#' BIC of bnet 
+#' 
+#' Computes de Bayesian Information Criteria for a bnet object over 
+#' a dataset of observations
+#' @param object a bnet object
+#' @param data the data to compute the log-likelihood
+#' @param ... compatibility arguments
+#' @return Numerical, the Bayesian Information Criteria computed.
+#' @seealso \code{\link{AIC.bnet}}
 BIC.bnet <- function(object, data, ... ){
  return(AIC.bnet(object,data,k=log(dim(data)[1])))
 }
+
+#'Dimension of a bnet object
+#'
+#'@param x a bnet object
+#'@return positive number, the dimension of \code{x}
+#'@export
+dim.bnet<-function(x){
+  if (!is.fitted.bnet(x)){
+    warning("bnet object is not fitted, impossible to compute dimension")
+    return(NULL)
+  }
+  return(sum(sapply(variables(x),function(v){
+    return(dim(x$variables[[v]]$prob))
+  })))
+}
+
+

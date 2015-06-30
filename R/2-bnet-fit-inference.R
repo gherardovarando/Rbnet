@@ -1,7 +1,6 @@
 .bnetenv<-new.env()
 lockBinding(sym = ".bnetenv",env = environment())
-assign(".bnetPars",value = list(mle=FALSE,
-                                search=FALSE,
+assign(".bnetPars",value = list(searchBmop=FALSE,
                                 intMethod="adaptative"), envir=.bnetenv  )
 lockEnvironment(env = .bnetenv,bindings = ".bnetPars")
 
@@ -49,19 +48,19 @@ bnetPar<-function(...){
 
 
 
-#' Evaluate an object over points
-#' 
-#' This is a generic functions
-#' @param x points over perform evaluations
-#' @param object R object to be evaluated \code{evaluate.foo} must be available 
-#' for object of class \code{foo}
-#' @return array of evaluations
+# Evaluate an object over points (INTERNAL FUNCTION)
+# 
+# This is a generic functions
+# @param x points over perform evaluations
+# @param object R object to be evaluated \code{evaluate.foo} must be available 
+# for object of class \code{foo}
+# @return array of evaluations
 evaluate<-function(x,object,...){
   UseMethod("evaluate",object)
 }
 
 
-#' internal function 
+# (INTERNAL FUNCTION)
 evaluate.evidence<-function(x,object,MIN=10^(-10)){
   if (is.null(dim(x))){
     dim(x)<-c(1,length(x))
@@ -73,35 +72,35 @@ evaluate.evidence<-function(x,object,MIN=10^(-10)){
 }
 
 
-#' Upper and Lower values for an object
-#' 
-#' This is a generic function, used by package bnet to compute lower and upper
-#' boundaries for the \code{$prob} values of a node.
-#' @param object an R object, e.g. a bmop object
-#' @return numeric value
+# Upper and Lower values for an object (INTERNAL FUNCTION)
+# 
+# This is a generic function, used by package bnet to compute lower and upper
+# boundaries for the \code{$prob} values of a node.
+# @param object an R object, e.g. a bmop object
+# @return numeric value
 lower<-function(object){ UseMethod("lower",object)}
 
-#' Upper and Lower values for an object
-#' 
-#' This is a generic function, used by package bnet to compute lower and upper
-#' boundaries for the \code{$prob} values of a node.
-#' @param object an R object, e.g. a bmop object
-#' @return numeric value
+# Upper and Lower values for an object (INTERNAL FUNCTION)
+# 
+# This is a generic function, used by package bnet to compute lower and upper
+# boundaries for the \code{$prob} values of a node.
+# @param object an R object, e.g. a bmop object
+# @return numeric value
 upper<-function(object){ UseMethod("upper",object)}
 
 
-#' internal lower for evidence
+# internal lower for evidence (INTERNAL FUNCTION)
 lower.evidence<-function(object){
   return(object)
 }
 
-#' internal upper for evidence
+# internal upper for evidence (INTERNAL FUNCTION)
 upper.evidence<-function(object){
   return(object)
 }
 
 
-#' fast fit, internal function
+# fast fit, internal function (INTERNAL FUNCTION)
 bmop_fit.bnet<-function(object,data,nodes,unif.variables=NULL,Mins=NULL,
                         Maxs=NULL,...){
   nodes<-nodes[nodes %in% variables.bnet(object)]
@@ -165,18 +164,22 @@ bmop_fit.bnet<-function(object,data,nodes,unif.variables=NULL,Mins=NULL,
 #'                      0,0,0,0,0))
 #' bnet<-new_bnet(names(data),mat)
 #' bnet<-fit.bnet(bnet,data)
-fit.bnet<-function(object,data,nodes=NULL,
-                   search=bnetPar()$search,...){
+fit.bnet<-function(object,data,nodes=NULL,Mins=NULL,Maxs=NULL,...){
   if (is.null(nodes)){
     nodes<-variables.bnet(object)
   }
-  if (search){
-   return(bmop_search.bnet(object=object, data=data , nodes=nodes, ...))
-  }
-  else{
     
+  if (is.null(Mins)){
+    Mins<-lapply(data,min)
+    names(Mins)<-variables(object)
+  }
+  if (is.null(Maxs)){
+    Maxs<-lapply(data,max)
+    names(Maxs)<-variables(object)
+  }
     return(bmop_fit.bnet(object = 
-                                       object,data = data,nodes=nodes, ...))}
+                                  object,data = data,nodes=nodes,
+                         Mins=Mins,Maxs=Maxs,...))
 
 }
 
@@ -186,9 +189,12 @@ fit.bnet<-function(object,data,nodes=NULL,
 #' @param object a bnet object
 #' @param evidence numeric with names or list, the value of evidence
 #' @param store.old logical
+#' @param propagate logical, see details
 #' @return a bnet object with evidence
+#' @details If  \code{propagate} is set to \code{TRUE}, the evidence will be 
+#' naively propagate, that is propagate to the direct child.
 #' @export
-put_evidence.bnet<-function(object,evidence,store.old=T){
+put_evidence.bnet<-function(object,evidence,store.old=T,propagate=T){
   evidence<-as.list(evidence)
   for (a in names(evidence)){
     if (is.null(object$variables[[a]]$name)){
@@ -197,10 +203,29 @@ put_evidence.bnet<-function(object,evidence,store.old=T){
     }
     if (store.old){
         object$variables[[a]]$prob.old<-object$variables[[a]]$prob
-
+      if (propagate){
+      for (n in child.bnet(object = object,nodes = a)){
+        object$variables[[n]]$prob.old<-object$variables[[n]]$prob
+      }  
+      }
     }
     object$variables[[a]]$prob<-evidence[[a]]
     class(object$variables[[a]]$prob)<-"evidence"
+  }
+  
+  if (propagate){
+    for (a in names(evidence)){
+    for (n in child.bnet(object = object,nodes = a)){
+      par<-object$variables[[n]]$parents
+      if (!class(object$variables[[n]]$prob)=="evidence"){
+        
+      object$variables[[n]]$prob<-Rbmop::put_evidence.bmop(
+        evd.pos = (2:(length(par)+1))[par==a] ,
+        evidence = evidence[[a]]  ,
+        object = object$variables[[n]]$prob  )
+      }
+    }  
+  }
   }
   object$store.old<-store.old
   return(object)
@@ -220,7 +245,8 @@ clear_evidence.bnet<-function(object){
     return(object)
   }
   if (!object$store.old){
-    warning("Old probability was lost putting evidence...")
+    warning("Old probability was lost putting evidence...
+            Next time try saving it")
     return(object)
   }
   else{
@@ -268,7 +294,7 @@ probability.bnet<-function(x,object,log=F){
   }
 else {
   to.integrate<-var[!(var %in%  names(x))]
-  warning("partial evidence is not implemented")
+  warning("partial evidence is not yet implemented")
   return(NULL)
 }
 }

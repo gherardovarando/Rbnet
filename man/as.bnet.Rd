@@ -15,7 +15,7 @@ as.bnet(x, ...)
 a bnet object
 }
 \description{
-..when possible (matrix, bnlearn, graph)
+..when possible (matrix, bnlearn, graph, formulas)
 }
 \examples{
 mat <- rbind(c(0, 0, 1, 1),

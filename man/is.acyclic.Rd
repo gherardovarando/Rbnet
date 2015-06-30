@@ -7,7 +7,7 @@
 is.acyclic(object)
 }
 \arguments{
-\item{object}{}
+\item{object}{an R object}
 }
 \value{
 logical

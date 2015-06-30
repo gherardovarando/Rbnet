@@ -4,16 +4,16 @@
 \alias{fit.bnet}
 \title{Fit a bnet object}
 \usage{
-fit.bnet(object, data, nodes = NULL, search = bnetPar()$search, ...)
+fit.bnet(object, data, nodes = NULL, ...)
 }
 \arguments{
 \item{object}{a bnet obejct}
 
 \item{data}{data.frame with names that include the variables of \code{object}}
 
-\item{search}{logical, use penalized loglik search or not}
-
 \item{...}{additional parameters to be passed to the bmop fitting functions}
+
+\item{search}{logical, use penalized loglik search or not}
 }
 \value{
 a bnet object with fitted densities and conditional densities

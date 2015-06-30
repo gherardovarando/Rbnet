@@ -4,7 +4,7 @@
 \alias{add_nodes.bnet}
 \title{add nodes to a bnet object}
 \usage{
-add_nodes.bnet(object, nodes, data = NULL, mle = F, search = F, ...)
+add_nodes.bnet(object, nodes, data = NULL, ...)
 }
 \arguments{
 \item{object}{a bnet obejct}
@@ -12,10 +12,6 @@ add_nodes.bnet(object, nodes, data = NULL, mle = F, search = F, ...)
 \item{nodes}{a vector of names for the nodes to be added}
 
 \item{data}{optionally a data.frame for fitting the new nodes}
-
-\item{mle}{logical, if use maximum-likelihood estimation in the new nodes}
-
-\item{search}{logical, if use greedy logLik search}
 
 \item{...}{additional parameters to be passed to bmop fitting functions}
 }

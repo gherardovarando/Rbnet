@@ -6,6 +6,12 @@
 \usage{
 \method{is.acyclic}{bnet}(object)
 }
+\arguments{
+\item{object}{a bnet object}
+}
+\value{
+logical
+}
 \description{
 isacyclic bnet
 }

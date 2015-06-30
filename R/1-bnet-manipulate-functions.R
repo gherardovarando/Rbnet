@@ -4,8 +4,6 @@
 #' @param object a bnet obejct
 #' @param nodes a vector of names for the nodes to be added
 #' @param data optionally a data.frame for fitting the new nodes
-#' @param mle logical, if use maximum-likelihood estimation in the new nodes
-#' @param search logical, if use greedy logLik search
 #' @param ... additional parameters to be passed to bmop fitting functions
 #'  @return a bnet object
 #' @export
@@ -18,7 +16,7 @@
 #' plot(bnet)
 #' bnet<-add_nodes.bnet(bnet,"5")
 #' plot(bnet)
-add_nodes.bnet<-function(object,nodes,data=NULL,mle=F,search=F,...){
+add_nodes.bnet<-function(object,nodes,data=NULL,...){
   for (node in nodes){
   if (node %in% variables.bnet(object)){
     warning("node is already in the network, original bnet is returned")
@@ -27,7 +25,7 @@ add_nodes.bnet<-function(object,nodes,data=NULL,mle=F,search=F,...){
     object$variables[[node]]$names<-node
   }
   if (!is.null(data)){
-    object<-fit.bnet(object,data,nodes=node,mle=mle,search=search,...)
+    object<-fit.bnet(object,data,nodes=nodes,,...)
   }
   }
   return(object)
@@ -41,8 +39,6 @@ add_nodes.bnet<-function(object,nodes,data=NULL,mle=F,search=F,...){
 #' @param data optionally a data.frame for fitting the \code{to} node that 
 #' now has an additional parent
 #' @param check logical, to check or not for acyclic property
-#' @param mle logical, if use maximum-likelihood estimation in the new nodes
-#' @param search logical, if use greedy penalized logLik search
 #' @param ... additional parameters to be passed to bmop fitting functions
 #'  @return a bnet object
 #' @export
@@ -55,9 +51,12 @@ add_nodes.bnet<-function(object,nodes,data=NULL,mle=F,search=F,...){
 #' plot(bnet)
 #' bnet<-add_arc.bnet(bnet,"1","2")
 #' plot(bnet)
-add_arc.bnet<-function(object,from,to,data=NULL,check=T,mle=F,search=F,...){
+add_arc.bnet<-function(object,from,to,data=NULL,check=T,...){
   old<-object
   variables<-variables.bnet(object)
+  if (from==to){
+    warning("Start and end node are the same, original object is returned")
+    return(object)}
   if (!(from %in% variables)){ object<-add_nodes.bnet(object,
                                                       from,data=data[,from])}
   if (!(to %in% variables)){ object<-add_nodes.bnet(object,to)}
@@ -71,7 +70,7 @@ add_arc.bnet<-function(object,from,to,data=NULL,check=T,mle=F,search=F,...){
    }
   }
   if (!is.null(data)){
-    object<-fit.bnet(object,data,nodes=to,mle=mle,search=search,...)
+    object<-fit.bnet(object,data,nodes=to,...)
   }
   return(object)
 }
@@ -82,8 +81,6 @@ add_arc.bnet<-function(object,from,to,data=NULL,check=T,mle=F,search=F,...){
 #' @param from node to start the arc from
 #' @param to node to end the arc
 #' @param data optionally a data.frame for fitting 
-#' @param mle logical, if use maximum-likelihood estimation in the new nodes
-#' @param search logical, if use greedy penalized logLik search
 #' @param ... additional parameters to be passed to bmop fitting functions
 #'  @return a bnet object
 #' @export
@@ -96,7 +93,7 @@ add_arc.bnet<-function(object,from,to,data=NULL,check=T,mle=F,search=F,...){
 #' plot(bnet)
 #' bnet<-delete_arc.bnet(bnet,"1","3")
 #' plot(bnet)
-delete_arc.bnet<-function(object,from,to,data=NULL,mle=F,search=F,...){
+delete_arc.bnet<-function(object,from,to,data=NULL,...){
   variables<-variables.bnet(object)
   arcs <- arcs.bnet(object = object)
   tos <- arcs[arcs[, 1]==from, 2]
@@ -108,7 +105,7 @@ delete_arc.bnet<-function(object,from,to,data=NULL,mle=F,search=F,...){
   object$variables[[to]]$parents<-pp[!(pp==from)]
   object$info$fitted<-F
   if (!is.null(data)){
-    object<-fit.bnet(object,data,nodes=to,mle=mle,search=search,...)
+    object<-fit.bnet(object,data,nodes=to,...)
   }
   return(object)
 }
@@ -118,8 +115,6 @@ delete_arc.bnet<-function(object,from,to,data=NULL,mle=F,search=F,...){
 #' @param object a bnet obejct
 #' @param node node to be deleted
 #' @param data optionally a data.frame for fitting 
-#' @param mle logical, if use maximum-likelihood estimation in the new nodes
-#' @param search logical, if use greedy penalized logLik search
 #' @param ... additional parameters to be passed to bmop fitting functions
 #' @return a bnet object
 #' @export
@@ -132,7 +127,7 @@ delete_arc.bnet<-function(object,from,to,data=NULL,mle=F,search=F,...){
 #' plot(bnet)
 #' bnet<-delete_node.bnet(bnet,"1")
 #' plot(bnet)
-delete_node.bnet<-function(object,node,data=NULL,mle=F,search=F,...){
+delete_node.bnet<-function(object,node,data=NULL,...){
   var<-variables.bnet(object)
   if (!(node %in% var)){
     warning("node is note present in the network, original object is returned")
@@ -146,7 +141,7 @@ delete_node.bnet<-function(object,node,data=NULL,mle=F,search=F,...){
   }
   object$info$fitted<-F
   if (!is.null(data)){
-   object<-fit.bnet(object = object,nodes=child,data,mle=mle,search=search,...)
+   object<-fit.bnet(object = object,nodes=child,data,...)
   }
   return(object)
   
