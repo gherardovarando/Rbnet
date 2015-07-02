@@ -4,7 +4,7 @@
 \alias{fit.bnet}
 \title{Fit a bnet object}
 \usage{
-fit.bnet(object, data, nodes = NULL, ...)
+fit.bnet(object, data, nodes = NULL, Mins = NULL, Maxs = NULL, ...)
 }
 \arguments{
 \item{object}{a bnet obejct}

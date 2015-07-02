@@ -4,14 +4,14 @@
 \alias{onevsall_bnet}
 \title{Classifier One vs All}
 \usage{
-onevsall_bnet(target, predictors, data = NULL)
+onevsall_bnet(targets, predictors, data = NULL)
 }
 \arguments{
-\item{target}{}
-
 \item{predictors}{}
 
 \item{data}{data set of observations}
+
+\item{target}{}
 }
 \value{
 a multiclass_bnet object

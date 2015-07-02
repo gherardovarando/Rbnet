@@ -192,7 +192,7 @@ fit.bnet<-function(object,data,nodes=NULL,Mins=NULL,Maxs=NULL,...){
 #' @param propagate logical, see details
 #' @return a bnet object with evidence
 #' @details If  \code{propagate} is set to \code{TRUE}, the evidence will be 
-#' naively propagate, that is propagate to the direct child.
+#' naively propagate, that is propagate just to the direct child.
 #' @export
 put_evidence.bnet<-function(object,evidence,store.old=T,propagate=T){
   evidence<-as.list(evidence)

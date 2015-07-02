@@ -5,8 +5,7 @@
 \title{Hill-Climbing structure search}
 \usage{
 hillClimb.bnet(data, bnet = NULL, whitelist = NULL, blacklist = NULL,
-  score = BIC, maxp = dim(data)[2], maxrep = 1000, mle = F,
-  search = T, ...)
+  score = BIC, maxp = dim(data)[2], maxrep = 1000, ...)
 }
 \arguments{
 \item{data}{data frame of observation}
@@ -25,10 +24,6 @@ hillClimb.bnet(data, bnet = NULL, whitelist = NULL, blacklist = NULL,
 
 \item{maxrep}{positive integer, the maximum number of iterations or jump
        in the search space}
-
-\item{mle}{logical, if use mle estimation of bmop densities}
-
-\item{search}{logical, if use greedy penalized logLik search}
 
 \item{...}{additional parameters to be passed to bmop fitting functions}
 }

@@ -12,11 +12,17 @@ put_evidence.bnet(object, evidence, store.old = T, propagate = T)
 \item{evidence}{numeric with names or list, the value of evidence}
 
 \item{store.old}{logical}
+
+\item{propagate}{logical, see details}
 }
 \value{
 a bnet object with evidence
 }
 \description{
 put evidence on a bnet object
+}
+\details{
+If  \code{propagate} is set to \code{TRUE}, the evidence will be
+naively propagate, that is propagate just to the direct child.
 }
 

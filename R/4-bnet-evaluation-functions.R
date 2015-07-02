@@ -19,9 +19,9 @@
 #'        (usally \code{MSE}) over the prediction and the true value for the 
 #'        given fold (ot train/test set).  
 #' @export
-validate.bnet<-function(object=NULL,modelfun=NULL,data=NULL,targets=NULL,
+validation<-function(x=naive_bayes.bnet,data=NULL,targets=NULL,
                         predictors=NULL,folds=NULL,numfolds=10,randomfolds=F,
-                        train=NULL,test=NULL,evalfun=MSE,mle=F,search=F,mc.cores=1){
+                        train=NULL,test=NULL,evalfun=MSE,mc.cores=1){
   prl<-F
   if (is.null(data)){
     warning("provide dataset")
@@ -44,12 +44,12 @@ validate.bnet<-function(object=NULL,modelfun=NULL,data=NULL,targets=NULL,
     }
   }
   
-  if (is.function(modelfun)){
-  
+  if (is.function(x)){
+  modelfun<-x
       eval<-parallel::mclapply(mc.cores = mc.cores,X = folds$folds,FUN = function(ff){
-        bnet<-modelfun(targets=targets,predictors=predictors,
-                       data=data[ff$training, ],mle=mle,search=search)
-        prd<-predict(object = bnet,newdata = data[ff$test, ])
+        model<-modelfun(targets=targets,predictors=predictors,
+                       data=data[ff$training, ])
+        prd<-predict(object = model,newdata = data[ff$test, ])
         return(evalfun(prd,data[ff$test, targets]))
       })
       eval<-as.numeric(eval)
@@ -57,7 +57,8 @@ validate.bnet<-function(object=NULL,modelfun=NULL,data=NULL,targets=NULL,
     
 }
   
-  if (!is.null(object)){  
+  if (is.bnet(x)){
+    object<-x
   eval<-parallel::mclapply(mc.cores = mc.cores,X = folds$folds,FUN = function(ff){
       fitted<-fit.bnet(object = object,data = data[ff$training, ],mle=mle,
                        search=search)
@@ -85,8 +86,6 @@ validate.bnet<-function(object=NULL,modelfun=NULL,data=NULL,targets=NULL,
 #' and \code{y}
 #' @export
 zero_one_accuracy<-function(x,y){
-  x<-fix_data(x)
-  y<-fix_data(y)
   I<-array(dim = dim(x),data = 1)
   I[x!=y]=0
   return(sum(I)/prod(dim(I)))

@@ -5,18 +5,18 @@
 #' Learn a multi net classifier unsing bnet, in particular learn a model
 #' where for every class value a bnet object is estimated. 
 #' As particular case naive Bayes (\code{bnets=NULL}).
-#' @param target
+#' @param targets
 #' @param predictors
 #' @param prior string, NULL, or vector of positive numbers
 #' @param data data set of observations
 #' @param bnets optionally a list of bnet object, one for each class value
 #' @return a classifier_bnet object
 #' @export
-classifier_bnet<-function(target,predictors,prior=NULL,data=NULL
+classifier_bnet<-function(targets,predictors,prior=NULL,data=NULL
                           ,bnets=NULL){
   
   if (is.null(bnets)){
-    levs<-levels(as.factor(data[,target]))
+    levs<-levels(as.factor(data[,targets]))
     bnets <- lapply(levs,FUN = function(x){
       new_bnet(variables = predictors)})
     names(bnets)<-levs
@@ -26,35 +26,35 @@ classifier_bnet<-function(target,predictors,prior=NULL,data=NULL
   Mins<-lapply(predictors,FUN = function(a){ min(data[,a])})
   names(Mins)<-predictors
   nb<-list()
-  nb$target<-list()
-  nb$target$name<-target
+  nb$targets<-list()
+  nb$targets$name<-targets
   for (a in predictors){
     nb$predictors[[a]]<-list()
     nb$predictors[[a]]$name<-a
   }
   if (!is.null(prior)){
     if (prior=="uniform"){
-      prior<-rep(1,length(levels(data[,target])))
+      prior<-rep(1,length(levels(data[,targets])))
     }
     if (is.null(names(prior))){ names(prior)<-1:length(prior) }
-    nb$target$levels<-names(prior)
-    nb$target$prior<-prior/sum(prior) 
+    nb$targets$levels<-names(prior)
+    nb$targets$prior<-prior/sum(prior) 
   }
   
   if (!is.null(data)){
-    data[, target]<-as.factor(data[, target])
-    nb$target$levels<-levels(as.factor(x = data[,target]))
+    data[, targets]<-as.factor(data[, targets])
+    nb$targets$levels<-levels(as.factor(x = data[,targets]))
     if (is.null(prior)){
-      nb$target$prior<-sapply(X = nb$target$levels,FUN = function(l){
-        return(length(data[data[,target]==l,target])/dim(data)[1])
+      nb$targets$prior<-sapply(X = nb$targets$levels,FUN = function(l){
+        return(length(data[data[,targets]==l,targets])/dim(data)[1])
       })}
     
-    nb$bnets<-lapply(nb$target$levels,FUN = function(l){
+    nb$bnets<-lapply(nb$targets$levels,FUN = function(l){
       return(fit.bnet(object = bnets[[l]],
-                      data =   data[ data[,target]==l, predictors]
+                      data =   data[ data[,targets]==l, predictors]
                       ,Maxs=Maxs,Mins=Mins))
     })
-    names(nb$bnets)<-nb$target$levels
+    names(nb$bnets)<-nb$targets$levels
   }
   class(nb)<-"bnetClassifier"
   return(nb)
@@ -65,22 +65,22 @@ classifier_bnet<-function(target,predictors,prior=NULL,data=NULL
 #' prediction of \code{classifier_bnet} object
 #' @export
 predict.bnetClassifier<-function(object,newdata,log.odds=F,...){
-  target<-object$target$name
-  newdata<-fix_data(newdata[,names(object$predictors)])
+  targets<-object$targets$name
+  newdata<-as.data.frame(newdata[,names(object$predictors)])
   prd<-array(dim = c(dim(newdata)[1],1))
   for (i in 1:(dim(newdata)[1])){
     
-    prob<-sapply(X = object$target$levels,FUN = function(l){
+    prob<-sapply(X = object$targets$levels,FUN = function(l){
       return(probability.bnet(x = newdata[i,],object = object$bnets[[l]]
                               ,log = T))
     })
-    prob<-prob+log(object$target$prior)
+    prob<-prob+log(object$targets$prior)
     sorted<-sort(decreasing = T,x = prob,index.return=T)
     if (log.odds){
       prd[i]<-prob[1]-prob[2]
     }
     else{
-    prd[i]<-object$target$levels[sorted$ix[1]]
+    prd[i]<-object$targets$levels[sorted$ix[1]]
     }
   }
   return(prd)
@@ -88,20 +88,7 @@ predict.bnetClassifier<-function(object,newdata,log.odds=F,...){
 }
 
 
-#' Plot the densities for every class value
-#' 
-#' @param object a classifier_bnet object
-#' @export
-plot_densities.classifier_bnet<-function(object){
-  for (a in names(object$predictors)){
-    l<-list()
-    for (i in object$target$levels){
-      l[[i]]<-object$bnets[[i]]$variables[[a]]$prob
-      
-    }
-    comparison_plot(l,dtrue = NULL,names.bmop = object$target$levels,file =paste("densities",a,".pdf",sep=""),colors = rainbow(length(l)) )
-  }
-}
+
 
 #' Plot various densities for bnet classifier
 #'
@@ -115,12 +102,14 @@ densplot.bnetClassifier<-function(x,predictor=NULL,...){
     predictor<-x$bnets[[1]]$variables[[1]]$name
   }
   l<-list()
-    for (i in x$target$levels){
+    for (i in x$targets$levels){
       l[[i]]<-x$bnets[[i]]$variables[[predictor]]$prob
     }
   m<-lower(x$bnets[[1]]$variables[[predictor]]$prob)
   M<-upper(x$bnets[[1]]$variables[[predictor]]$prob)
-    Rbmop::comparison_plot(l,dtrue = NULL,names.bmop = x$target$levels,colors = rainbow(length(l)) ,ylim=c(0,3/(M-m)))
+    Rbmop::comparison_plot(l,dtrue = NULL,
+                           names.bmop = x$targets$levels,
+                           colors = rainbow(length(l)) ,ylim=c(0,3/(M-m)))
   return(invisible())
 }
 
@@ -132,7 +121,7 @@ densplot.bnetClassifier<-function(x,predictor=NULL,...){
 #' @return invisible()
 #' @export 
 plot.bnetClassifier<-function(x,...){
-    plot(naive_bayes.bnet(bnet = x$bnets[[1]],targets =x$target$name,
+    plot(naive_bayes.bnet(bnet = x$bnets[[1]],targets =x$targets$name,
                           predictors=variables(x$bnets[[1]]) ))
 return(invisible())
 }
@@ -145,23 +134,23 @@ return(invisible())
 #' @param data data set of observations
 #' @return a multiclass_bnet object
 #' @export
-onevsall_bnet<-function(target,predictors,data=NULL){
-  if (length(levels(data[[target]]))<=2){warning("Use this functions with 
+onevsall_bnet<-function(targets,predictors,data=NULL){
+  if (length(levels(data[[targets]]))<=2){warning("Use this functions with 
                                                  multi-class problems")
-                                         return(classifier_bnet(target,
+                                         return(classifier_bnet(targets,
                                                                 predictors, 
                                                                 data=data))
   }
-  for (l in levels(data[[target]])){
+  for (l in levels(data[[targets]])){
     data[[l]]<-rep(0,dim(data)[1])
     data[[l]][data$Layer==l]<-1
     data[[l]]<-as.factor(data[[l]])
   }
-  mod<-lapply(levels(data[[target]]),FUN = function(l){
-    return(classifier_bnet(target = l,predictors = predictors,prior = NULL,
+  mod<-lapply(levels(data[[targets]]),FUN = function(l){
+    return(classifier_bnet(targets = l,predictors = predictors,prior = NULL,
                            data=data,bnets=NULL))
   })
-  names(mod)<-levels(data[[target]])
+  names(mod)<-levels(data[[targets]])
   class(mod)<-"onevsall_bnet"
   return(mod)
   
@@ -191,12 +180,3 @@ variables.bnetClassifier<-function(object){
 }
 
 
-#' Tikz exporting
-#' 
-#' Export the bnet object in a .tex file with tikz format
-#' @param object a bnet object to  be exported
-#' @param file the name of the file 
-#' @details In the actual workspace a file will be created and the bnet object 
-#' will be exported in tikz format to be used in LaTex.  
-#' 
-#' 
