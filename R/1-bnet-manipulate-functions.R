@@ -146,3 +146,46 @@ delete_node.bnet<-function(object,node,data=NULL,...){
   return(object)
   
 }
+
+#' Bnet variables ordering 
+#' 
+#' @param object a bnet object
+#' @return a bnet object with variables ordered
+#' @export
+orden.bnet<-function(object){
+  var<-c()
+  old<-variables(object)
+  while (length(old)>0){
+    if (all(object$variables[[old[1]]]$parents %in% var )){
+      var<-c(var,old[1])
+      old<-old[-1]
+    }
+    else{
+      old<-c(old[-1],old[1])
+    }
+  }
+  object$variables<-object$variables[var]
+  return(object)
+}
+
+
+#' Marginal Computation
+#' 
+#' @param object an bnet object
+#' @return an bnet object with marginal computed by integration
+#' @export
+compute_marginal.bnet<- function(object){
+  object<-orden.bnet(object)
+  for (a in variables(object)){
+    
+    mopC<- object$variables[[a]]$prob
+    mop<-new_bmop(knots = mopC$knots[MARGIN],order = mopC$order[MARGIN])
+    
+    C<-integration_constants(bmop = mopC)
+    c<-integration_constants(bmop=mop)
+    mop$ctrpoints<-apply(C*mopC$ctrpoints,MARGIN = MARGIN,FUN = sum)
+    mop$ctrpoints<-mop$ctrpoints/c
+    
+  }
+  
+}

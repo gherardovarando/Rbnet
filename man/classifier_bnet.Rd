@@ -4,8 +4,8 @@
 \alias{classifier_bnet}
 \title{Multinet classifier using bnet}
 \usage{
-classifier_bnet(targets, predictors, prior = NULL, data = NULL,
-  bnets = NULL)
+classifier_bnet(formula = NULL, targets, predictors, prior = NULL,
+  data = NULL, bnets = NULL, ...)
 }
 \arguments{
 \item{targets}{}

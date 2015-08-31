@@ -520,3 +520,42 @@ dim.bnet<-function(x){
 }
 
 
+
+#' Convert bnet into list of nodes and arcs
+#' 
+#' @param x a bnet object
+#' @return a list with at least component \code{nodes} and \code{arcs}
+#' @export
+as.COSA.bnet<- function(x){
+  L<-list()
+  L$nodes <- variables(x)
+  L$mins <- sapply(x$variables,function(a){
+    return(lower(a$prob))
+    })
+  L$maxs  <- sapply(x$variables,function(a){
+    return(upper(a$prob))
+  }) 
+  L$arcs  <- arcs(x)
+  return(L)
+}
+
+
+#' Return marginal x,y to plot
+#' 
+#' @param node id of the node to plot the marginal
+#' @param object bnet object
+#' @param N number of points 
+#' @param MIN 
+#' @export
+marginal.bnet<-function(node,object,N=1000,MIN=0){
+  bmop<-object$variables[[node]]$marginal
+  if (is.null(bmop)){
+  return(list(x=c(0,1),y=c(1,1)))  
+  }
+  x<-lower(bmop)+(0:(N-1))*(upper(bmop)-lower(bmop))/(N-1)
+  y<- evaluate(x,bmop,MIN=MIN)
+  return(list(x=x,y=y))
+ }
+
+
+

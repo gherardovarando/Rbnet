@@ -106,19 +106,23 @@ bmop_fit.bnet<-function(object,data,nodes,unif.variables=NULL,Mins=NULL,
   nodes<-nodes[nodes %in% variables.bnet(object)]
   for (a in nodes){
     var<-c(a,object$variables[[a]]$parents)
-    D<-data[,var]
+    D<-as.data.frame(data[,var])
     if (!is.element(el = a,set = unif.variables)){
    
-          object$variables[[a]]$prob<-Rbmop::bmop_fit(data = D,conditional = T,
+          object$variables[[a]]$prob <- Rbmop::bmop_fit(data = D,conditional = T,
                                                            Min = Mins[var],
                                                            Max=Maxs[var],
                                                            ...)
+          object$variables[[a]]$marginal <- Rbmop::bmop_fit(data=data[,a]) 
     
 
     }
     else{
+      
+
       object$variables[[a]]$prob<-
-        Rbmop::new_bmop(knots = Rbmop::generate_knots(data=D,N = 1),
+        Rbmop::new_bmop(knots = Rbmop::generate_knots(data=NULL,N = 1,
+                                                      Min=Mins[var],Max=Maxs[var]),
                         order = 1,ctrpoints = 1)
       object$variables[[a]]$prob<-
         Rbmop::normalize.bmop(object$variables[[a]]$prob)  
@@ -176,6 +180,9 @@ fit.bnet<-function(object,data,nodes=NULL,Mins=NULL,Maxs=NULL,...){
   if (is.null(Maxs)){
     Maxs<-lapply(data,max)
     names(Maxs)<-variables(object)
+  }
+  if (dim(data)[1]==0){
+ return(object)
   }
     return(bmop_fit.bnet(object = 
                                   object,data = data,nodes=nodes,
