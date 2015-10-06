@@ -13,12 +13,15 @@
 #' @return a classifier_bnet object
 #' @export
 classifier_bnet<-function(formula=NULL,targets,predictors,prior=NULL,data=NULL
-                          ,bnets=NULL,...){
+                          ,bnets=NULL,object=NULL,...){
   
   if (inherits(formula,"formula")){
     targets<-as.character(formula[[2]])
     targets<-targets[! (targets %in% c("+","~","-","*") )]
     predictors<-all.vars(formula)[! (all.vars(formula) %in% targets)]
+  }
+  if (!is.null(object)){
+    bnets<-object$bnets  
   }
   
   if (is.null(bnets)){
@@ -26,6 +29,15 @@ classifier_bnet<-function(formula=NULL,targets,predictors,prior=NULL,data=NULL
     bnets <- lapply(levs,FUN = function(x){
       new_bnet(variables = predictors)})
     names(bnets)<-levs
+  }
+  else{
+   if (is.bnet(bnets)){
+     levs<-levels(as.factor(data[,targets]))
+     bnets1 <- lapply(levs,FUN = function(x){
+       bnets})
+     names(bnets1)<-levs
+     bnets<-bnets1
+   }
   }
   Maxs<-lapply(predictors,FUN = function(a){ max(data[,a])})
   names(Maxs)<-predictors
